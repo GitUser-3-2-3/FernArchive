@@ -22,9 +22,9 @@ type backend struct {
 }
 
 func main() {
-	cfg := config{}
+	var cfg config
 
-	flag.StringVar(&cfg.env, "env", "development", "Environment")
+	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev, staging, prod)")
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.Parse()
 
@@ -33,13 +33,10 @@ func main() {
 		logger: logger,
 		config: cfg,
 	}
-	router := http.NewServeMux()
-	router.HandleFunc("/v1/healthcheck", bknd.healthcheckHandler)
-
 	srvr := &http.Server{
 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      router,
+		Handler:      bknd.routes(),
 		ReadTimeout:  10 * time.Second,
 		IdleTimeout:  time.Minute,
 		WriteTimeout: 10 * time.Second,
