@@ -1,12 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
 func (bknd *backend) healthcheckHandler(w http.ResponseWriter, _ *http.Request) {
-	_, _ = fmt.Fprintln(w, "status: available")
-	_, _ = fmt.Fprintf(w, "version: %f\n", version)
-	_, _ = fmt.Fprintf(w, "environment: %s\n", bknd.config.env)
+	data := map[string]string{"status": "available",
+		"environment": bknd.config.env,
+		"version":     version,
+	}
+	err := bknd.writeJSON(w, http.StatusOK, data, nil)
+	if err != nil {
+		bknd.logger.Error(err.Error())
+		http.Error(w, "could not process your request", http.StatusInternalServerError)
+	}
 }
