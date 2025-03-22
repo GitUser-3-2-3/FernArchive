@@ -8,7 +8,7 @@ import (
 	"FernArchive/internal/data"
 )
 
-func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) {
+func (bknd *backend) createMovieHandler(w http.ResponseWriter, _ *http.Request) {
 	_, _ = fmt.Fprintln(w, "create a new movie")
 }
 
@@ -32,6 +32,6 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
+func (bknd *backend) updateMovieHandler(w http.ResponseWriter, _ *http.Request) {
 	_, _ = fmt.Fprintln(w, "update a movie")
 }
