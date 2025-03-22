@@ -15,7 +15,7 @@ func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) 
 func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := bknd.readIdParam(r)
 	if err != nil {
-		http.NotFound(w, r)
+		bknd.notFoundResponse(w, r)
 		return
 	}
 	movie := data.Movie{
@@ -28,8 +28,7 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = bknd.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		bknd.logger.Error(err.Error())
-		http.Error(w, "could not process your request", http.StatusInternalServerError)
+		bknd.serverErrorResponse(w, r, err)
 	}
 }
 
