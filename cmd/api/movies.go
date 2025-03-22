@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,7 +15,7 @@ func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) 
 		Runtime int32    `json:"runtime"`
 		Genre   []string `json:"genres"`
 	}
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := bknd.readJSON(w, r, &input)
 	if err != nil {
 		bknd.errorResponseJSON(w, r, http.StatusBadRequest, err.Error())
 		return
