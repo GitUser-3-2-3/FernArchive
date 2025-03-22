@@ -10,10 +10,10 @@ import (
 
 func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int      `json:"year"`
-		Runtime int32    `json:"runtime"`
-		Genre   []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int          `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genre   []string     `json:"genres"`
 	}
 	err := bknd.readJSON(w, r, &input)
 	if err != nil {
