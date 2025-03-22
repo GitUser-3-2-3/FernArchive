@@ -32,6 +32,10 @@ func (bknd *backend) notFoundResponse(w http.ResponseWriter, r *http.Request) {
 	bknd.errorResponseJSON(w, r, http.StatusNotFound, msg)
 }
 
+func (bknd *backend) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+	bknd.errorResponseJSON(w, r, http.StatusBadRequest, err.Error())
+}
+
 func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	bknd.logError(r, err)
 	msg := "server encountered a problem and could not process your request"
