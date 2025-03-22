@@ -26,7 +26,7 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 		Genres:    []string{"action", "sci-fi", "war"},
 		Version:   1,
 	}
-	err = bknd.writeJSON(w, http.StatusOK, movie, nil)
+	err = bknd.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
 		bknd.logger.Error(err.Error())
 		http.Error(w, "could not process your request", http.StatusInternalServerError)

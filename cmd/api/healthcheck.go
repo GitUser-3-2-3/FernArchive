@@ -5,11 +5,13 @@ import (
 )
 
 func (bknd *backend) healthcheckHandler(w http.ResponseWriter, _ *http.Request) {
-	data := map[string]string{"status": "available",
-		"environment": bknd.config.env,
-		"version":     version,
+	env := envelope{"status": "available",
+		"system_info": map[string]string{
+			"version":     version,
+			"environment": bknd.config.env,
+		},
 	}
-	err := bknd.writeJSON(w, http.StatusOK, data, nil)
+	err := bknd.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		bknd.logger.Error(err.Error())
 		http.Error(w, "could not process your request", http.StatusInternalServerError)
