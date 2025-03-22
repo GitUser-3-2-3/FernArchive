@@ -17,7 +17,7 @@ func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	err := bknd.readJSON(w, r, &input)
 	if err != nil {
-		bknd.errorResponseJSON(w, r, http.StatusBadRequest, err.Error())
+		bknd.badRequestResponse(w, r, err)
 		return
 	}
 	_, _ = fmt.Fprintf(w, "%+v\n", input)
