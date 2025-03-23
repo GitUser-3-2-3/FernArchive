@@ -6,18 +6,30 @@ import (
 	"time"
 
 	"FernArchive/internal/data"
+	"FernArchive/internal/validator"
 )
 
 func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Title   string       `json:"title"`
-		Year    int          `json:"year"`
 		Runtime data.Runtime `json:"runtime"`
-		Genre   []string     `json:"genres"`
+		Year    int32        `json:"year"`
+		Genres  []string     `json:"genres"`
 	}
 	err := bknd.readJSON(w, r, &input)
 	if err != nil {
 		bknd.badRequestResponse(w, r, err)
+		return
+	}
+	vldtr := validator.NewValidator()
+	movie := &data.Movie{
+		Title:   input.Title,
+		Runtime: input.Runtime,
+		Year:    input.Year,
+		Genres:  input.Genres,
+	}
+	if data.ValidateMovie(vldtr, movie); !vldtr.Valid() {
+		bknd.failedValidationResponse(w, r, vldtr.Errors)
 		return
 	}
 	_, _ = fmt.Fprintf(w, "%+v\n", input)
