@@ -33,18 +33,17 @@ func main() {
 
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev, staging, prod)")
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.db.dsn, "db-dsn",
-		"postgres://fern_archive:Qwerty1,0*@localhost/fern_archive?sslmode=disable", "PostgresSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("ARCHIVE_DB_DSN"), "PostgresSQL DSN")
 	flag.Parse()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	db, err := openDB(cfg)
 	if err != nil {
 		logger.Error(err.Error())
+		os.Exit(1)
 	}
 	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
+		if err := db.Close(); err != nil {
 			logger.Error(err.Error())
 		}
 	}(db)
