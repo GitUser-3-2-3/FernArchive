@@ -41,3 +41,9 @@ func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request,
 	msg := "server encountered a problem and could not process your request"
 	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
 }
+
+func (bknd *backend) failedValidationResponse(w http.ResponseWriter, r *http.Request,
+	errs map[string]string,
+) {
+	bknd.errorResponseJSON(w, r, http.StatusUnprocessableEntity, errs)
+}
