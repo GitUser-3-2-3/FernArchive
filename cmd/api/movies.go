@@ -32,7 +32,18 @@ func (bknd *backend) createMovieHandler(w http.ResponseWriter, r *http.Request) 
 		bknd.failedValidationResponse(w, r, vldtr.Errors)
 		return
 	}
-	_, _ = fmt.Fprintf(w, "%+v\n", input)
+	err = bknd.models.Movies.Insert(movie)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.Id))
+
+	err = bknd.writeJSON(w, http.StatusCreated, envelope{"movie": movie}, headers)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+	}
 }
 
 func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
