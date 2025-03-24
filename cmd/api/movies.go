@@ -68,6 +68,50 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (bknd *backend) updateMovieHandler(w http.ResponseWriter, _ *http.Request) {
-	_, _ = fmt.Fprintln(w, "update a movie")
+func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := bknd.readIdParam(r)
+	if err != nil {
+		bknd.notFoundResponse(w, r)
+		return
+	}
+	movie, err := bknd.models.Movies.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			bknd.notFoundResponse(w, r)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	var input struct {
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genres  []string     `json:"genres"`
+	}
+	err = bknd.readJSON(w, r, &input)
+	if err != nil {
+		bknd.badRequestResponse(w, r, err)
+		return
+	}
+	movie.Title = input.Title
+	movie.Year = input.Year
+	movie.Runtime = input.Runtime
+	movie.Genres = input.Genres
+
+	vldtr := validator.NewValidator()
+	if data.ValidateMovie(vldtr, movie); !vldtr.Valid() {
+		bknd.failedValidationResponse(w, r, vldtr.Errors)
+		return
+	}
+	err = bknd.models.Movies.Update(movie)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
+	err = bknd.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+	}
 }
