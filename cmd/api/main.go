@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"FernArchive/internal/data"
 )
 
 import _ "github.com/lib/pq"
@@ -27,8 +29,9 @@ type config struct {
 }
 
 type backend struct {
-	config config
 	logger *slog.Logger
+	config config
+	models data.Models
 }
 
 func main() {
@@ -59,6 +62,7 @@ func main() {
 	bknd := &backend{
 		logger: logger,
 		config: cfg,
+		models: data.NewModels(db),
 	}
 	srvr := &http.Server{
 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
