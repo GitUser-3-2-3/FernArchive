@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 
 	"FernArchive/internal/validator"
@@ -14,6 +15,26 @@ type Movie struct {
 	Year      int32     `json:"year,omitempty"`
 	Genres    []string  `json:"genres,omitempty"`
 	Version   int32     `json:"version"`
+}
+
+type MovieModel struct {
+	DB *sql.DB
+}
+
+func (mdl *MovieModel) Insert(movie *Movie) error {
+	return nil
+}
+
+func (mdl *MovieModel) Get(id int64) (*Movie, error) {
+	return nil, nil
+}
+
+func (mdl *MovieModel) Update(movie *Movie) error {
+	return nil
+}
+
+func (mdl *MovieModel) Delete(id int64) error {
+	return nil
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
