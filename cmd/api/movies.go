@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"FernArchive/internal/data"
 	"FernArchive/internal/validator"
@@ -52,13 +52,15 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 		bknd.notFoundResponse(w, r)
 		return
 	}
-	movie := data.Movie{
-		Id:        id,
-		CreatedAt: time.Now(),
-		Title:     "Infinity War",
-		Runtime:   102,
-		Genres:    []string{"action", "sci-fi", "war"},
-		Version:   1,
+	movie, err := bknd.models.Movies.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			bknd.notFoundResponse(w, r)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
+		return
 	}
 	err = bknd.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
