@@ -36,14 +36,19 @@ func (bknd *backend) badRequestResponse(w http.ResponseWriter, r *http.Request, 
 	bknd.errorResponseJSON(w, r, http.StatusBadRequest, err.Error())
 }
 
-func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	bknd.logError(r, err)
-	msg := "server encountered a problem and could not process your request"
-	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
-}
-
 func (bknd *backend) failedValidationResponse(w http.ResponseWriter, r *http.Request,
 	errs map[string]string,
 ) {
 	bknd.errorResponseJSON(w, r, http.StatusUnprocessableEntity, errs)
+}
+
+func (bknd *backend) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	msg := "unable to update record due an edit conflict, please try again"
+	bknd.errorResponseJSON(w, r, http.StatusConflict, msg)
+}
+
+func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	bknd.logError(r, err)
+	msg := "server encountered a problem and could not process your request"
+	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
 }
