@@ -80,12 +80,13 @@ func (bknd *backend) listMovieHandler(w http.ResponseWriter, r *http.Request) {
 	input.Title = bknd.readString(qs, "title", "")
 	input.Genres = bknd.readCSV(qs, "genres", []string{})
 
-	input.Filters.Page = bknd.readInt(qs, "page", 1, vldtr)
 	input.Filters.PageSize = bknd.readInt(qs, "page_size", 20, vldtr)
+	input.Filters.Page = bknd.readInt(qs, "page", 1, vldtr)
 
 	input.Filters.Sort = bknd.readString(qs, "sort", "id")
+	input.Filters.SortParams = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
 
-	if !vldtr.Valid() {
+	if data.ValidateFilters(vldtr, input.Filters); !vldtr.Valid() {
 		bknd.failedValidationResponse(w, r, vldtr.Errors)
 		return
 	}
