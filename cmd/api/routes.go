@@ -16,6 +16,7 @@ func (bknd *backend) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/movies", bknd.createMovieHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.showMovieHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/movies/:id", bknd.updateMovieHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.deleteMovieHandler)
 
 	return bknd.recoverPanic(router)
 }
