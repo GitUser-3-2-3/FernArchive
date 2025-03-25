@@ -63,6 +63,22 @@ func (mdl *MovieModel) Update(movie *Movie) error {
 }
 
 func (mdl *MovieModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+	query := `DELETE FROM movies WHERE id = $1`
+
+	result, err := mdl.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }
 

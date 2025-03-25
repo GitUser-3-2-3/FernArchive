@@ -115,3 +115,25 @@ func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) 
 		bknd.serverErrorResponse(w, r, err)
 	}
 }
+
+func (bknd *backend) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := bknd.readIdParam(r)
+	if err != nil {
+		bknd.notFoundResponse(w, r)
+		return
+	}
+	err = bknd.models.Movies.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			bknd.notFoundResponse(w, r)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	err = bknd.writeJSON(w, http.StatusOK, envelope{"message": "movie deleted successfully"}, nil)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+	}
+}
