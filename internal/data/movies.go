@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -29,8 +30,11 @@ func (mdl *MovieModel) Insert(movie *Movie) error {
 		    VALUES ($1, $2, $3, $4)
 		    RETURNING id, created_at, version`
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
-	return mdl.DB.QueryRow(query, args...).Scan(&movie.Id, &movie.CreatedAt, &movie.Version)
+	return mdl.DB.QueryRowContext(ctx, query, args...).Scan(&movie.Id, &movie.CreatedAt, &movie.Version)
 }
 
 func (mdl *MovieModel) Get(id int64) (*Movie, error) {
@@ -41,7 +45,10 @@ func (mdl *MovieModel) Get(id int64) (*Movie, error) {
                 WHERE id = $1`
 	movie := new(Movie)
 
-	err := mdl.DB.QueryRow(query, id).Scan(&movie.Id, &movie.CreatedAt,
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := mdl.DB.QueryRowContext(ctx, query, id).Scan(&movie.Id, &movie.CreatedAt,
 		&movie.Title, &movie.Year, &movie.Runtime, pq.Array(&movie.Genres), &movie.Version)
 	if err != nil {
 		switch {
@@ -58,10 +65,12 @@ func (mdl *MovieModel) Update(movie *Movie) error {
 	query := `UPDATE movies SET title=$1, year=$2, runtime=$3, genres=$4, version=version+1
                 WHERE id = $5 AND version=$6 RETURNING version`
 
-	args := []any{movie.Title,
-		movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.Id, movie.Version}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	err := mdl.DB.QueryRow(query, args...).Scan(&movie.Version)
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.Id,
+		movie.Version}
+	err := mdl.DB.QueryRowContext(ctx, query, args...).Scan(&movie.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -79,7 +88,10 @@ func (mdl *MovieModel) Delete(id int64) error {
 	}
 	query := `DELETE FROM movies WHERE id = $1`
 
-	result, err := mdl.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := mdl.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
