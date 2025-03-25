@@ -103,7 +103,12 @@ func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	err = bknd.models.Movies.Update(movie)
 	if err != nil {
-		bknd.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			bknd.editConflictResponse(w, r)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 	err = bknd.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
