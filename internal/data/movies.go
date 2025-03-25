@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
 	"time"
 
 	"FernArchive/internal/validator"
@@ -59,6 +60,39 @@ func (mdl *MovieModel) Get(id int64) (*Movie, error) {
 		}
 	}
 	return movie, nil
+}
+
+func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*Movie, error) {
+	query := `SELECT id, created_at, title, year, runtime, genres, version FROM movies
+                ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := mdl.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		if err := rows.Close(); err != nil {
+			slog.Error("Error in rows.Close()", "err", err)
+		}
+	}(rows)
+	var movies []*Movie
+
+	for rows.Next() {
+		var movie Movie
+		err := rows.Scan(&movie.Id, &movie.CreatedAt, &movie.Title,
+			&movie.Year, &movie.Runtime, pq.Array(&movie.Genres), &movie.Version)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &movie)
+	}
+	if rows.Err() != nil {
+		return nil, err
+	}
+	return movies, nil
 }
 
 func (mdl *MovieModel) Update(movie *Movie) error {

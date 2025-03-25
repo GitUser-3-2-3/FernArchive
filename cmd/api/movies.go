@@ -90,7 +90,15 @@ func (bknd *backend) listMovieHandler(w http.ResponseWriter, r *http.Request) {
 		bknd.failedValidationResponse(w, r, vldtr.Errors)
 		return
 	}
-	_, _ = fmt.Fprintf(w, "%+v\n", input)
+	movies, err := bknd.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
+	err = bknd.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+	}
 }
 
 func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
