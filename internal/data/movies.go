@@ -82,19 +82,34 @@ func (mdl *MovieModel) Delete(id int64) error {
 	return nil
 }
 
-func ValidateMovie(v *validator.Validator, movie *Movie) {
-	v.Check(movie.Title != "", "title", "must be provided")
-	v.Check(len(movie.Title) <= 500, "title", "must not be more than 500 bytes long")
+func (movie *Movie) ApplyPartialUpdates(title *string, year *int32, runtime *Runtime, genres []string) {
+	if title != nil {
+		movie.Title = *title
+	}
+	if year != nil {
+		movie.Year = *year
+	}
+	if runtime != nil {
+		movie.Runtime = *runtime
+	}
+	if genres != nil {
+		movie.Genres = genres
+	}
+}
 
-	v.Check(movie.Year != 0, "year", "must be provided")
-	v.Check(movie.Year >= 1888, "year", "must be greater than 1888")
-	v.Check(movie.Year <= int32(time.Now().Year()), "year", "must not be in the future")
+func ValidateMovie(vldtr *validator.Validator, movie *Movie) {
+	vldtr.Check(movie.Title != "", "title", "must be provided")
+	vldtr.Check(len(movie.Title) <= 500, "title", "must not be more than 500 bytes long")
 
-	v.Check(movie.Runtime != 0, "runtime", "must be provided")
-	v.Check(movie.Runtime > 0, "runtime", "must be a positive integer")
+	vldtr.Check(movie.Year != 0, "year", "must be provided")
+	vldtr.Check(movie.Year >= 1888, "year", "must be greater than 1888")
+	vldtr.Check(movie.Year <= int32(time.Now().Year()), "year", "must not be in the future")
 
-	v.Check(movie.Genres != nil, "genres", "must be provided")
-	v.Check(len(movie.Genres) >= 1, "genres", "must contain at least 1 genre")
-	v.Check(len(movie.Genres) <= 5, "genres", "must not contain more than 5 genres")
-	v.Check(validator.Unique(movie.Genres), "genres", "must not contain duplicate values")
+	vldtr.Check(movie.Runtime != 0, "runtime", "must be provided")
+	vldtr.Check(movie.Runtime > 0, "runtime", "must be a positive integer")
+
+	vldtr.Check(movie.Genres != nil, "genres", "must be provided")
+	vldtr.Check(len(movie.Genres) >= 1, "genres", "must contain at least 1 genre")
+	vldtr.Check(len(movie.Genres) <= 5, "genres", "must not contain more than 5 genres")
+	vldtr.Check(validator.Unique(movie.Genres), "genres", "must not contain duplicate values")
 }
