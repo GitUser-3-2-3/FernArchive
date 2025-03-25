@@ -68,6 +68,32 @@ func (bknd *backend) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (bknd *backend) listMovieHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title    string
+		Genres   []string
+		Page     int
+		PageSize int
+		Sort     string
+	}
+	vldtr := validator.NewValidator()
+	qs := r.URL.Query()
+
+	input.Title = bknd.readString(qs, "title", "")
+	input.Genres = bknd.readCSV(qs, "genres", []string{})
+
+	input.Page = bknd.readInt(qs, "page", 1, vldtr)
+	input.PageSize = bknd.readInt(qs, "page_size", 20, vldtr)
+
+	input.Sort = bknd.readString(qs, "sort", "id")
+
+	if !vldtr.Valid() {
+		bknd.failedValidationResponse(w, r, vldtr.Errors)
+		return
+	}
+	_, _ = fmt.Fprintf(w, "%+v\n", input)
+}
+
 func (bknd *backend) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := bknd.readIdParam(r)
 	if err != nil {

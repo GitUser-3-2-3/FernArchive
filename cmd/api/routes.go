@@ -13,9 +13,13 @@ func (bknd *backend) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(bknd.notFoundResponse)
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", bknd.healthcheckHandler)
+
 	router.HandlerFunc(http.MethodPost, "/v1/movies", bknd.createMovieHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.showMovieHandler)
 	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", bknd.updateMovieHandler)
+
+	router.HandlerFunc(http.MethodGet, "/v1/movies", bknd.listMovieHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.showMovieHandler)
+
 	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.deleteMovieHandler)
 
 	return bknd.recoverPanic(router)
