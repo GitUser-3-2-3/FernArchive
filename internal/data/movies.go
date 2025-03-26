@@ -68,13 +68,16 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
                     WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
    			  AND (genres @> $2 OR $2 = '{}')`
 
-	orderClause := fmt.Sprintf(`ORDER BY %s %s, id ASC`, fltr.sortParam(), fltr.sortOrder())
+	orderClause := fmt.Sprintf(
+		`ORDER BY %s %s, id ASC LIMIT $3 OFFSET $4`, fltr.sortParam(), fltr.sortOrder())
+
 	query := baseQuery + " " + orderClause
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := mdl.DB.QueryContext(ctx, query, title, pq.Array(genres))
+	args := []any{title, pq.Array(genres), fltr.limit(), fltr.offset()}
+	rows, err := mdl.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
