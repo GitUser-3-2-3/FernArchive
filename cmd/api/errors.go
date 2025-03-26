@@ -52,3 +52,8 @@ func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request,
 	msg := "server encountered a problem and could not process your request"
 	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
 }
+
+func (bknd *backend) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	msg := "rate limit exceeded, please try after a few seconds"
+	bknd.errorResponseJSON(w, r, http.StatusTooManyRequests, msg)
+}
