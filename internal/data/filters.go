@@ -29,6 +29,14 @@ func (fltr *Filters) sortOrder() string {
 	return "ASC"
 }
 
+func (fltr *Filters) limit() int {
+	return fltr.PageSize
+}
+
+func (fltr *Filters) offset() int {
+	return (fltr.Page - 1) * fltr.PageSize
+}
+
 func ValidateFilters(vldtr *validator.Validator, fltr Filters) {
 	vldtr.Check(fltr.Page > 0, "page", "must be greater than zero")
 	vldtr.Check(fltr.Page <= 10_000_000, "page", "must be a maximum of 10 million")
