@@ -63,15 +63,13 @@ func (mdl *MovieModel) Get(id int64) (*Movie, error) {
 	return movie, nil
 }
 
-func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*Movie, error) {
-	baseQuery := `SELECT id, created_at, title, year, runtime, genres, version FROM movies
+func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*Movie, Metadata, error) {
+	query := fmt.Sprintf(`
+                    SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version 
+                    FROM movies
                     WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
-   			  AND (genres @> $2 OR $2 = '{}')`
-
-	orderClause := fmt.Sprintf(
-		`ORDER BY %s %s, id ASC LIMIT $3 OFFSET $4`, fltr.sortParam(), fltr.sortOrder())
-
-	query := baseQuery + " " + orderClause
+   			  AND (genres @> $2 OR $2 = '{}') 
+                    ORDER BY %s %s, id ASC LIMIT $3 OFFSET $4`, fltr.sortParam(), fltr.sortOrder())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -79,28 +77,38 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
 	args := []any{title, pq.Array(genres), fltr.limit(), fltr.offset()}
 	rows, err := mdl.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer func(rows *sql.Rows) {
 		if err := rows.Close(); err != nil {
 			slog.Error("Error in rows.Close()", "err", err)
 		}
 	}(rows)
+
+	var totalRecords = 0
 	var movies []*Movie
 
 	for rows.Next() {
 		var movie Movie
-		err := rows.Scan(&movie.Id, &movie.CreatedAt, &movie.Title,
-			&movie.Year, &movie.Runtime, pq.Array(&movie.Genres), &movie.Version)
+		err := rows.Scan(&totalRecords,
+			&movie.Id,
+			&movie.CreatedAt,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Version,
+		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		movies = append(movies, &movie)
 	}
 	if rows.Err() != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
-	return movies, nil
+	metadata := calculateMetadata(totalRecords, fltr.Page, fltr.PageSize)
+	return movies, metadata, nil
 }
 
 func (mdl *MovieModel) Update(movie *Movie) error {
