@@ -1,12 +1,32 @@
 package data
 
-import "FernArchive/internal/validator"
+import (
+	"strings"
+
+	"FernArchive/internal/validator"
+)
 
 type Filters struct {
 	Page       int
 	PageSize   int
 	Sort       string
 	SortParams []string
+}
+
+func (fltr *Filters) sortParam() string {
+	for _, param := range fltr.SortParams {
+		if fltr.Sort == param {
+			return strings.TrimPrefix(fltr.Sort, "-")
+		}
+	}
+	panic("unsafe sort parameter: " + fltr.Sort)
+}
+
+func (fltr *Filters) sortOrder() string {
+	if strings.HasPrefix(fltr.Sort, "-") {
+		return "DESC"
+	}
+	return "ASC"
 }
 
 func ValidateFilters(vldtr *validator.Validator, fltr Filters) {
