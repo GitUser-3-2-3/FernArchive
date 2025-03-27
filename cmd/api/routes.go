@@ -22,5 +22,5 @@ func (bknd *backend) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.deleteMovieHandler)
 
-	return bknd.recoverPanic(bknd.rateLimit(router))
+	return bknd.recoverPanic(bknd.rateLimiter(router))
 }

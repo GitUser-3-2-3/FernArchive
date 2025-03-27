@@ -22,7 +22,7 @@ func (bknd *backend) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-func (bknd *backend) rateLimit(next http.Handler) http.Handler {
+func (bknd *backend) rateLimiter(next http.Handler) http.Handler {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -44,23 +44,26 @@ func (bknd *backend) rateLimit(next http.Handler) http.Handler {
 		}
 	}()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			bknd.serverErrorResponse(w, r, err)
-			return
-		}
-		mtx.Lock()
-		if _, found := clients[ip]; !found {
-			clients[ip] = &client{limiter: rate.NewLimiter(2, 4)}
-		}
-		clients[ip].lastSeen = time.Now()
+		if bknd.config.limiter.enabled {
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				bknd.serverErrorResponse(w, r, err)
+				return
+			}
+			mtx.Lock()
+			if _, found := clients[ip]; !found {
+				clients[ip] = &client{limiter: rate.NewLimiter(
+					rate.Limit(bknd.config.limiter.rps), bknd.config.limiter.burst)}
+			}
+			clients[ip].lastSeen = time.Now()
 
-		if !clients[ip].limiter.Allow() {
+			if !clients[ip].limiter.Allow() {
+				mtx.Unlock()
+				bknd.rateLimitExceededResponse(w, r)
+				return
+			}
 			mtx.Unlock()
-			bknd.rateLimitExceededResponse(w, r)
-			return
 		}
-		mtx.Unlock()
 		next.ServeHTTP(w, r)
 	})
 }
