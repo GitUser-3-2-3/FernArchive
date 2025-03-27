@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const constraintUniqueEmail = `pq: duplicate key value violets unique constraint "users_email_key"`
+const constraintUniqueEmail = `pq: duplicate key value violates unique constraint "users_email_key"`
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
@@ -84,14 +84,14 @@ type UserModel struct {
 
 func (mdl *UserModel) InsertUser(user *User) error {
 	query := `INSERT INTO users (name, email, password_hash, activated) VALUES ($1, $2, $3, $4)
-                RETURNING id, created_at, activated`
+                RETURNING id, created_at, version`
 
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := mdl.Db.QueryRowContext(ctx, query, args...).Scan(&user.Id, user.CreatedAt, &user.Version)
+	err := mdl.Db.QueryRowContext(ctx, query, args...).Scan(&user.Id, &user.CreatedAt, &user.Version)
 	if err != nil {
 		switch {
 		case err.Error() == constraintUniqueEmail:
