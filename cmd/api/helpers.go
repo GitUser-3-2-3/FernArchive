@@ -84,7 +84,7 @@ func (bknd *backend) readInt(qs url.Values, key string, defaultValue int, vldtr 
 	}
 	intgr, err := strconv.Atoi(str)
 	if err != nil {
-		vldtr.AddErrors(key, "must be an integer value")
+		vldtr.AddError(key, "must be an integer value")
 		return defaultValue
 	}
 	return intgr
