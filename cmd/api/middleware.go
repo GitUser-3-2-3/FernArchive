@@ -35,8 +35,8 @@ func (bknd *backend) rateLimiter(next http.Handler) http.Handler {
 		for {
 			time.Sleep(time.Minute)
 			mtx.Lock()
-			for ip, client := range clients {
-				if time.Since(client.lastSeen) > 3*time.Minute {
+			for ip, clnt := range clients {
+				if time.Since(clnt.lastSeen) > 3*time.Minute {
 					delete(clients, ip)
 				}
 			}
