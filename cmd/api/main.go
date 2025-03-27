@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
@@ -60,16 +58,7 @@ func main() {
 		config: cfg,
 		models: data.NewModels(db),
 	}
-	srvr := &http.Server{
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      bknd.routes(),
-		ReadTimeout:  10 * time.Second,
-		IdleTimeout:  time.Minute,
-		WriteTimeout: 10 * time.Second,
-	}
-	logger.Info("API server started", "addrs", srvr.Addr, "env", cfg.env)
-	err = srvr.ListenAndServe()
+	err = bknd.serve()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
