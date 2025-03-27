@@ -20,7 +20,7 @@ func (vldtr *Validator) Valid() bool {
 	return len(vldtr.Errors) == 0
 }
 
-func (vldtr *Validator) AddErrors(key, value string) {
+func (vldtr *Validator) AddError(key, value string) {
 	if _, exists := vldtr.Errors[key]; !exists {
 		vldtr.Errors[key] = value
 	}
@@ -28,7 +28,7 @@ func (vldtr *Validator) AddErrors(key, value string) {
 
 func (vldtr *Validator) Check(ok bool, key, value string) {
 	if !ok {
-		vldtr.AddErrors(key, value)
+		vldtr.AddError(key, value)
 	}
 }
 
