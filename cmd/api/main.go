@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"FernArchive/internal/data"
+	"FernArchive/internal/mailer"
 )
 
 import _ "github.com/lib/pq"
@@ -29,12 +30,20 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type backend struct {
 	logger *slog.Logger
 	config config
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -57,6 +66,8 @@ func main() {
 		logger: logger,
 		config: cfg,
 		models: data.NewModels(db),
+		mailer: mailer.NewMailer(cfg.smtp.host, cfg.smtp.port,
+			cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 	err = bknd.serve()
 	if err != nil {
@@ -78,6 +89,13 @@ func runClFlags(cfg *config) {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Limiter max requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 5, "Limiter max burst requests")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiting")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "1702867f97eaf8", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "84bdbfed10e5d6", "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender",
+		"FernArchive <parthsrivastav.00@gmail.com>", "SMTP sender")
 
 	flag.Parse()
 }

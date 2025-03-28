@@ -1,0 +1,28 @@
+{{define "subject"}}Welcome to Fern Archive!{{end}}
+
+{{define "plainBody"}}
+    Hi {{.Name}},
+    Thanks for signing up for Fern Archive. We are excited to have you on board!
+
+    For future reference, your user ID number is {{.Id}}
+
+    Thanks,
+    The Fern Archive Team
+{{end}}
+
+{{define "htmlBody"}}
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8" content="text/html" http-equiv="content-type">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Document</title>
+        </head>
+        <body>
+            <p>Hi {{.Name}}, </p>
+            <p>Thanks for signing up for Fern Archive. We are excited to have you on board!</p>
+            <p>For future reference, your user ID number is {{.Id}}</p>
+            <p>Thanks,</p>
+            <p>The Fern Archive Team</p>
+        </body>
+    </html>
+{{end}}
