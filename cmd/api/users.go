@@ -46,12 +46,13 @@ func (bknd *backend) registerUserHandler(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-	err = bknd.mailer.Send(user.Email, "user_welcome.gohtml", user)
-	if err != nil {
-		bknd.serverErrorResponse(w, r, err)
-		return
-	}
-	err = bknd.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
+	bknd.background(func() {
+		err = bknd.mailer.SendEmail(user.Email, "user_welcome.gohtml", user)
+		if err != nil {
+			bknd.logger.Error(err.Error())
+		}
+	})
+	err = bknd.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
 		bknd.serverErrorResponse(w, r, err)
 	}

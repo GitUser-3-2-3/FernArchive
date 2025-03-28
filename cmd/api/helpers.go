@@ -61,35 +61,6 @@ func (bknd *backend) readJSON(w http.ResponseWriter, r *http.Request, dst any) e
 	return nil
 }
 
-func (bknd *backend) readCSV(qs url.Values, key string, defaultValue []string) []string {
-	csv := qs.Get(key)
-	if csv == "" {
-		return defaultValue
-	}
-	return strings.Split(csv, ",")
-}
-
-func (bknd *backend) readString(qs url.Values, key, defaultValue string) string {
-	str := qs.Get(key)
-	if str == "" {
-		return defaultValue
-	}
-	return str
-}
-
-func (bknd *backend) readInt(qs url.Values, key string, defaultValue int, vldtr *validator.Validator) int {
-	str := qs.Get(key)
-	if str == "" {
-		return defaultValue
-	}
-	intgr, err := strconv.Atoi(str)
-	if err != nil {
-		vldtr.AddError(key, "must be an integer value")
-		return defaultValue
-	}
-	return intgr
-}
-
 func (bknd *backend) decodeJSONError(err error) error {
 	var unmarshalTypeError *json.UnmarshalTypeError
 	var syntaxError *json.SyntaxError
@@ -119,4 +90,44 @@ func (bknd *backend) decodeJSONError(err error) error {
 	default:
 		return err
 	}
+}
+
+func (bknd *backend) readCSV(qs url.Values, key string, defaultValue []string) []string {
+	csv := qs.Get(key)
+	if csv == "" {
+		return defaultValue
+	}
+	return strings.Split(csv, ",")
+}
+
+func (bknd *backend) readString(qs url.Values, key, defaultValue string) string {
+	str := qs.Get(key)
+	if str == "" {
+		return defaultValue
+	}
+	return str
+}
+
+func (bknd *backend) readInt(qs url.Values, key string, defaultValue int, vldtr *validator.Validator) int {
+	str := qs.Get(key)
+	if str == "" {
+		return defaultValue
+	}
+	intgr, err := strconv.Atoi(str)
+	if err != nil {
+		vldtr.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+	return intgr
+}
+
+func (bknd *backend) background(fn func()) {
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				bknd.logger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+		fn()
+	}()
 }

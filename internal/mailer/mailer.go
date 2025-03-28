@@ -27,7 +27,7 @@ func NewMailer(host string, port int, username, password, sender string) Mailer 
 	}
 }
 
-func (mlr *Mailer) Send(recipient, tmpltName string, data any) error {
+func (mlr *Mailer) SendEmail(recipient, tmpltName string, data any) error {
 	tmplt, err := template.New("email").ParseFS(templateFS, "templates/"+tmpltName)
 	if err != nil {
 		return err
@@ -55,10 +55,12 @@ func (mlr *Mailer) Send(recipient, tmpltName string, data any) error {
 	msg.SetBody("text/plain", plainBody.String())
 	msg.AddAlternative("text/html", htmlBody.String())
 
-	err = mlr.dialer.DialAndSend(msg)
-	if err != nil {
-		return err
-	} else {
-		return nil
+	for i := 0; i < 3; i++ {
+		err = mlr.dialer.DialAndSend(msg)
+		if nil == err {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
 	}
+	return err
 }
