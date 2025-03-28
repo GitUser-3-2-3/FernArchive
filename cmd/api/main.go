@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"os"
+	"sync"
 	"time"
 
 	"FernArchive/internal/data"
@@ -44,6 +45,7 @@ type backend struct {
 	config config
 	models data.Models
 	mailer mailer.Mailer
+	wtgrp  sync.WaitGroup
 }
 
 func main() {

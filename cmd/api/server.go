@@ -31,9 +31,15 @@ func (bknd *backend) serve() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		shutdownError <- srvr.Shutdown(ctx)
+		err := srvr.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+		}
+		bknd.logger.Info("completing background tasks", "addr", srvr.Addr)
+		bknd.wtgrp.Wait()
+		shutdownError <- nil
 	}()
-	bknd.logger.Info("server started", "addrs", srvr.Addr, "env", bknd.config.env)
+	bknd.logger.Info("server started", "addr", srvr.Addr, "env", bknd.config.env)
 	err := srvr.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
@@ -42,6 +48,6 @@ func (bknd *backend) serve() error {
 	if err != nil {
 		return err
 	}
-	bknd.logger.Info("server stopped", "addrs", srvr.Addr, "env", bknd.config.env)
+	bknd.logger.Info("server stopped", "addr", srvr.Addr, "env", bknd.config.env)
 	return nil
 }

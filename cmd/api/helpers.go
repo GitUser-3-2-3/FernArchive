@@ -122,7 +122,9 @@ func (bknd *backend) readInt(qs url.Values, key string, defaultValue int, vldtr 
 }
 
 func (bknd *backend) background(fn func()) {
+	bknd.wtgrp.Add(1)
 	go func() {
+		defer bknd.wtgrp.Done()
 		defer func() {
 			if err := recover(); err != nil {
 				bknd.logger.Error(fmt.Sprintf("%v", err))
