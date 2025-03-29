@@ -14,11 +14,11 @@ func (bknd *backend) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", bknd.healthcheckHandler)
 
-	router.HandlerFunc(http.MethodPost, "/v1/movies", bknd.createMovieHandler)
-	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", bknd.updateMovieHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/movies", bknd.listMovieHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.showMovieHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.deleteMovieHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/movies", bknd.requireActivatedUser(bknd.createMovieHandler))
+	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", bknd.requireActivatedUser(bknd.updateMovieHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/movies", bknd.requireActivatedUser(bknd.listMovieHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.requireActivatedUser(bknd.showMovieHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.requireActivatedUser(bknd.deleteMovieHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", bknd.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", bknd.activateUserHandler)

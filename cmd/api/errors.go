@@ -63,6 +63,16 @@ func (bknd *backend) invalidAuthTokenResponse(w http.ResponseWriter, r *http.Req
 	bknd.errorResponseJSON(w, r, http.StatusUnauthorized, msg)
 }
 
+func (bknd *backend) authRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	msg := "you must be authenticated to access this resource"
+	bknd.errorResponseJSON(w, r, http.StatusUnauthorized, msg)
+}
+
+func (bknd *backend) inactiveAccountResponse(w http.ResponseWriter, r *http.Request) {
+	msg := "your account must be activated to access this resource"
+	bknd.errorResponseJSON(w, r, http.StatusForbidden, msg)
+}
+
 func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	bknd.logError(r, err)
 	msg := "server encountered a problem and could not process your request"
