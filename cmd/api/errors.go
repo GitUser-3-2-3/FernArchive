@@ -47,12 +47,6 @@ func (bknd *backend) editConflictResponse(w http.ResponseWriter, r *http.Request
 	bknd.errorResponseJSON(w, r, http.StatusConflict, msg)
 }
 
-func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	bknd.logError(r, err)
-	msg := "server encountered a problem and could not process your request"
-	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
-}
-
 func (bknd *backend) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
 	msg := "rate limit exceeded, please try after a few seconds"
 	bknd.errorResponseJSON(w, r, http.StatusTooManyRequests, msg)
@@ -61,4 +55,16 @@ func (bknd *backend) rateLimitExceededResponse(w http.ResponseWriter, r *http.Re
 func (bknd *backend) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	msg := "invalid authentication credentials!"
 	bknd.errorResponseJSON(w, r, http.StatusUnauthorized, msg)
+}
+
+func (bknd *backend) invalidAuthTokenResponse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("WWW-Authenticate", "Bearer")
+	msg := "invalid or missing authentication token!"
+	bknd.errorResponseJSON(w, r, http.StatusUnauthorized, msg)
+}
+
+func (bknd *backend) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	bknd.logError(r, err)
+	msg := "server encountered a problem and could not process your request"
+	bknd.errorResponseJSON(w, r, http.StatusInternalServerError, msg)
 }

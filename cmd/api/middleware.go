@@ -1,11 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
+
+	"FernArchive/internal/data"
+	"FernArchive/internal/validator"
 
 	"golang.org/x/time/rate"
 )
@@ -64,6 +69,43 @@ func (bknd *backend) rateLimiter(next http.Handler) http.Handler {
 			}
 			mtx.Unlock()
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (bknd *backend) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Add("Vary", "Authorization")
+		authHeader := r.Header.Get("Authorization")
+
+		if authHeader == "" {
+			r = bknd.contextSetUser(r, data.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+		headerParts := strings.SplitN(authHeader, " ", 2)
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			bknd.invalidAuthTokenResponse(w, r)
+			return
+		}
+		authToken := headerParts[1]
+		vldtr := validator.NewValidator()
+		if data.ValidateTokenPlainText(vldtr, authToken); !vldtr.Valid() {
+			bknd.invalidAuthTokenResponse(w, r)
+			return
+		}
+		user, err := bknd.models.Users.GetForToken(data.ScopeAuthentication, authToken)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				bknd.invalidAuthTokenResponse(w, r)
+			default:
+				bknd.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+		r = bknd.contextSetUser(r, user)
 		next.ServeHTTP(w, r)
 	})
 }

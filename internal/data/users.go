@@ -16,6 +16,8 @@ const constraintUniqueEmail = `pq: duplicate key value violates unique constrain
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
+var AnonymousUser = &User{}
+
 type User struct {
 	Id        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -24,6 +26,10 @@ type User struct {
 	Password  password  `json:"-"`
 	Activated bool      `json:"activated"`
 	Version   int       `json:"-"`
+}
+
+func (usr *User) IsAnonymous() bool {
+	return usr == AnonymousUser
 }
 
 type password struct {
