@@ -23,5 +23,7 @@ func (bknd *backend) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users", bknd.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", bknd.activateUserHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", bknd.createAuthTokenHandler)
+
 	return bknd.recoverPanic(bknd.rateLimiter(router))
 }
