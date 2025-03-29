@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"FernArchive/internal/data"
 	"FernArchive/internal/validator"
@@ -46,8 +47,17 @@ func (bknd *backend) registerUserHandler(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
+	token, err := bknd.models.Tokens.NewToken(user.Id, 3*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
 	bknd.background(func() {
-		err = bknd.mailer.SendEmail(user.Email, "user_welcome.gohtml", user)
+		userData := map[string]any{"activationToken": token.PlainText,
+			"userId":   user.Id,
+			"username": user.Name,
+		}
+		err = bknd.mailer.SendEmail(user.Email, "user_welcome.gohtml", userData)
 		if err != nil {
 			bknd.logger.Error(err.Error())
 		}
