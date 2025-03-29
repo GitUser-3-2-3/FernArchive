@@ -67,3 +67,52 @@ func (bknd *backend) registerUserHandler(w http.ResponseWriter, r *http.Request)
 		bknd.serverErrorResponse(w, r, err)
 	}
 }
+
+func (bknd *backend) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TokenPlainText string `json:"token"`
+	}
+	err := bknd.readJSON(w, r, &input)
+	if err != nil {
+		bknd.badRequestResponse(w, r, err)
+		return
+	}
+	vldtr := validator.NewValidator()
+
+	if data.ValidateTokenPlainText(vldtr, input.TokenPlainText); !vldtr.Valid() {
+		bknd.failedValidationResponse(w, r, vldtr.Errors)
+		return
+	}
+	user, err := bknd.models.Users.GetForToken(data.ScopeActivation, input.TokenPlainText)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			vldtr.AddError("token", "invalid or expired activation token")
+			bknd.failedValidationResponse(w, r, vldtr.Errors)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	user.Activated = true
+
+	err = bknd.models.Users.UpdateUser(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			bknd.editConflictResponse(w, r)
+		default:
+			bknd.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	err = bknd.models.Tokens.DeleteAllForUser(data.ScopeActivation, user.Id)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
+	err = bknd.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+	}
+}

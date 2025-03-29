@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"time"
@@ -142,13 +143,39 @@ func (mdl *UserModel) UpdateUser(user *User) error {
 	err := mdl.Db.QueryRowContext(ctx, query, args...).Scan(&user.Version)
 	if err != nil {
 		switch {
-		case err.Error() == constraintUniqueEmail:
-			return ErrDuplicateEmail
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrEditConflict
+		case err.Error() == constraintUniqueEmail:
+			return ErrDuplicateEmail
 		default:
 			return err
 		}
 	}
 	return nil
+}
+
+func (mdl *UserModel) GetForToken(scope, plainTxt string) (*User, error) {
+	hash := sha256.Sum256([]byte(plainTxt))
+
+	query := `SELECT users.id, users.created_at, users.name, users.email, users.password_hash, users.activated, users.version
+		    FROM users INNER JOIN tokens ON users.id = tokens.user_id
+		    WHERE tokens.hash = $1 AND tokens.scope = $2 AND tokens.expiry > $3`
+
+	args := []any{hash[:], scope, time.Now()}
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := mdl.Db.QueryRowContext(ctx, query, args...).Scan(&user.Id,
+		&user.CreatedAt, &user.Name, &user.Email, &user.Password.hash, &user.Activated, &user.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &user, nil
 }

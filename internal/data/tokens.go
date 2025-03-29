@@ -40,7 +40,7 @@ func generateToken(userId int64, ttl time.Duration, scope string) (*Token, error
 	return token, nil
 }
 
-func ValidateToken(vldtr *validator.Validator, plainTxt string) {
+func ValidateTokenPlainText(vldtr *validator.Validator, plainTxt string) {
 	vldtr.Check(plainTxt != "", "plainTxt", "must be provided")
 	vldtr.Check(len(plainTxt) == 26, "plainTxt", "must be 26 characters long")
 }
