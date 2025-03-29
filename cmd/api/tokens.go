@@ -46,7 +46,7 @@ func (bknd *backend) createAuthTokenHandler(w http.ResponseWriter, r *http.Reque
 		bknd.invalidCredentialsResponse(w, r)
 		return
 	}
-	token, err := bknd.models.Tokens.NewToken(user.Id, 360*time.Hour, data.ScopeActivation)
+	token, err := bknd.models.Tokens.NewToken(user.Id, 360*time.Hour, data.ScopeAuthentication)
 	if err != nil {
 		bknd.serverErrorResponse(w, r, err)
 		return
