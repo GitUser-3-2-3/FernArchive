@@ -113,7 +113,6 @@ func (bknd *backend) authenticate(next http.Handler) http.Handler {
 func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := bknd.contextGetUser(r)
-
 		if user.IsAnonymous() {
 			bknd.authRequiredResponse(w, r)
 			return
@@ -125,7 +124,6 @@ func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.Handle
 func (bknd *backend) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := bknd.contextGetUser(r)
-
 		if !user.Activated {
 			bknd.inactiveAccountResponse(w, r)
 			return
