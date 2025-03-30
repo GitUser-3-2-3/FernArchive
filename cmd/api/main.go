@@ -103,11 +103,21 @@ func runClFlags(cfg *config) {
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender",
 		"FernArchive <parthsrivastav.00@gmail.com>", "SMTP sender")
 
+	defaultOrigins := []string{"http://localhost:9000",
+		"http://localhost:9003",
+	}
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
-		cfg.cors.allowedOrigins = strings.Fields(val)
+		if val == "" {
+			cfg.cors.allowedOrigins = defaultOrigins
+		} else {
+			cfg.cors.allowedOrigins = strings.Fields(val)
+		}
 		return nil
 	})
 	flag.Parse()
+	if len(cfg.cors.allowedOrigins) == 0 {
+		cfg.cors.allowedOrigins = defaultOrigins
+	}
 }
 
 func openDB(cfg config) (*sql.DB, error) {
