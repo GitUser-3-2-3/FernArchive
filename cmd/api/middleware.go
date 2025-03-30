@@ -122,13 +122,31 @@ func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.Handle
 }
 
 func (bknd *backend) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
-	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := bknd.contextGetUser(r)
 		if !user.Activated {
 			bknd.inactiveAccountResponse(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
-	})
+	}
 	return bknd.requireAuthenticatedUser(fn)
+}
+
+func (bknd *backend) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		user := bknd.contextGetUser(r)
+
+		permissions, err := bknd.models.Permissions.GetAllForUser(user.Id)
+		if err != nil {
+			bknd.serverErrorResponse(w, r, err)
+			return
+		}
+		if !permissions.Include(code) {
+			bknd.notPermittedResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+	return bknd.requireActivatedUser(fn)
 }

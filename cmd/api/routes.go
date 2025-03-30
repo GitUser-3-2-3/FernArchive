@@ -6,24 +6,32 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+const (
+	post  = http.MethodPost
+	put   = http.MethodPut
+	patch = http.MethodPatch
+	get   = http.MethodGet
+	dlete = http.MethodDelete
+)
+
 func (bknd *backend) routes() http.Handler {
 	router := httprouter.New()
 
 	router.MethodNotAllowed = http.HandlerFunc(bknd.methodNotAllowedResponse)
 	router.NotFound = http.HandlerFunc(bknd.notFoundResponse)
 
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", bknd.healthcheckHandler)
+	router.HandlerFunc(get, "/v1/healthcheck", bknd.healthcheckHandler)
 
-	router.HandlerFunc(http.MethodPost, "/v1/movies", bknd.requireActivatedUser(bknd.createMovieHandler))
-	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", bknd.requireActivatedUser(bknd.updateMovieHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/movies", bknd.requireActivatedUser(bknd.listMovieHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", bknd.requireActivatedUser(bknd.showMovieHandler))
-	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", bknd.requireActivatedUser(bknd.deleteMovieHandler))
+	router.HandlerFunc(post, "/v1/movies", bknd.requirePermission("movies:write", bknd.createMovieHandler))
+	router.HandlerFunc(patch, "/v1/movies/:id", bknd.requirePermission("movies:write", bknd.updateMovieHandler))
+	router.HandlerFunc(get, "/v1/movies", bknd.requirePermission("movies:read", bknd.listMovieHandler))
+	router.HandlerFunc(get, "/v1/movies/:id", bknd.requirePermission("movies:read", bknd.showMovieHandler))
+	router.HandlerFunc(dlete, "/v1/movies/:id", bknd.requirePermission("movies:write", bknd.deleteMovieHandler))
 
-	router.HandlerFunc(http.MethodPost, "/v1/users", bknd.registerUserHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/users/activated", bknd.activateUserHandler)
+	router.HandlerFunc(post, "/v1/users", bknd.registerUserHandler)
+	router.HandlerFunc(put, "/v1/users/activated", bknd.activateUserHandler)
 
-	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", bknd.createAuthTokenHandler)
+	router.HandlerFunc(post, "/v1/tokens/authentication", bknd.createAuthTokenHandler)
 
 	return bknd.recoverPanic(bknd.rateLimiter(bknd.authenticate(router)))
 }

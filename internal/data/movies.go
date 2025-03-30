@@ -81,7 +81,7 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
 	}
 	defer func(rows *sql.Rows) {
 		if err := rows.Close(); err != nil {
-			slog.Error("Error in rows.Close()", "err", err)
+			slog.Error("Failed to close rows: ", err)
 		}
 	}(rows)
 
@@ -90,8 +90,7 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
 
 	for rows.Next() {
 		var movie Movie
-		err := rows.Scan(&totalRecords,
-			&movie.Id,
+		err := rows.Scan(&totalRecords, &movie.Id,
 			&movie.CreatedAt,
 			&movie.Title,
 			&movie.Year,
@@ -104,7 +103,7 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
 		}
 		movies = append(movies, &movie)
 	}
-	if rows.Err() != nil {
+	if err = rows.Err(); err != nil {
 		return nil, Metadata{}, err
 	}
 	metadata := calculateMetadata(totalRecords, fltr.Page, fltr.PageSize)
