@@ -47,6 +47,11 @@ func (bknd *backend) registerUserHandler(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
+	err = bknd.models.Permissions.AddForUser(user.Id, "movies:read")
+	if err != nil {
+		bknd.serverErrorResponse(w, r, err)
+		return
+	}
 	token, err := bknd.models.Tokens.NewToken(user.Id, 3*24*time.Hour, data.ScopeActivation)
 	if err != nil {
 		bknd.serverErrorResponse(w, r, err)

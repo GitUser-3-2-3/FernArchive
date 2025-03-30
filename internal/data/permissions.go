@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"slices"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Permissions []string
@@ -48,4 +50,15 @@ func (mdl PermissionModel) GetAllForUser(userId int64) (Permissions, error) {
 		return nil, err
 	}
 	return permissions, nil
+}
+
+func (mdl PermissionModel) AddForUser(userId int64, codes ...string) error {
+	query := `INSERT INTO user_permissions
+                SELECT $1, permissions.id FROM permissions WHERE permissions.code = ANY($2)`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := mdl.Db.ExecContext(ctx, query, userId, pq.Array(codes))
+	return err
 }
