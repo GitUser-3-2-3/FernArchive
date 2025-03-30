@@ -154,15 +154,32 @@ func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.Handle
 func (bknd *backend) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
 
 		origin := r.Header.Get("Origin")
-		if origin != "" {
-			for i := range bknd.config.cors.allowedOrigins {
-				if origin == bknd.config.cors.allowedOrigins[i] {
-					w.Header().Set("Access-Control-Allow-Origin", origin)
-					break
-				}
+		if origin == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		var originAllowed bool
+		for _, allowedOrigin := range bknd.config.cors.allowedOrigins {
+			if origin == allowedOrigin {
+				originAllowed = true
+				break
 			}
+		}
+		if !originAllowed {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+
+		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+			w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")
+			w.Header().Set("Access-Control-Max-Age", "60")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
