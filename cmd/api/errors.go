@@ -73,7 +73,7 @@ func (bknd *backend) inactiveAccountResponse(w http.ResponseWriter, r *http.Requ
 	bknd.errorResponseJSON(w, r, http.StatusForbidden, msg)
 }
 
-func (bknd *backend) notPermittedResponse(w http.ResponseWriter, r *http.Request) {
+func (bknd *backend) accessNotPermittedResponse(w http.ResponseWriter, r *http.Request) {
 	msg := "you do not have necessary permissions to access this resource"
 	bknd.errorResponseJSON(w, r, http.StatusForbidden, msg)
 }

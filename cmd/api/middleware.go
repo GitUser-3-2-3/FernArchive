@@ -110,15 +110,22 @@ func (bknd *backend) authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (bknd *backend) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := bknd.contextGetUser(r)
-		if user.IsAnonymous() {
-			bknd.authRequiredResponse(w, r)
+
+		permissions, err := bknd.models.Permissions.GetAllForUser(user.Id)
+		if err != nil {
+			bknd.serverErrorResponse(w, r, err)
+			return
+		}
+		if !permissions.Include(code) {
+			bknd.accessNotPermittedResponse(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
 	}
+	return bknd.requireActivatedUser(fn)
 }
 
 func (bknd *backend) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
@@ -133,20 +140,30 @@ func (bknd *backend) requireActivatedUser(next http.HandlerFunc) http.HandlerFun
 	return bknd.requireAuthenticatedUser(fn)
 }
 
-func (bknd *backend) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (bknd *backend) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		user := bknd.contextGetUser(r)
-
-		permissions, err := bknd.models.Permissions.GetAllForUser(user.Id)
-		if err != nil {
-			bknd.serverErrorResponse(w, r, err)
-			return
-		}
-		if !permissions.Include(code) {
-			bknd.notPermittedResponse(w, r)
+		if user.IsAnonymous() {
+			bknd.authRequiredResponse(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
 	}
-	return bknd.requireActivatedUser(fn)
+}
+
+func (bknd *backend) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Origin")
+
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			for i := range bknd.config.cors.allowedOrigins {
+				if origin == bknd.config.cors.allowedOrigins[i] {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					break
+				}
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
