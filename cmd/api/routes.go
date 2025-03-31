@@ -14,24 +14,19 @@ func (bknd *backend) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", bknd.healthcheckHandler)
 
-	router.HandlerFunc(
-		http.MethodPost, "/v1/movies",
+	router.HandlerFunc(http.MethodPost, "/v1/movies",
 		bknd.requirePermission("movies:write", bknd.createMovieHandler),
 	)
-	router.HandlerFunc(
-		http.MethodGet, "/v1/movies",
+	router.HandlerFunc(http.MethodGet, "/v1/movies",
 		bknd.requirePermission("movies:read", bknd.listMovieHandler),
 	)
-	router.HandlerFunc(
-		http.MethodPatch, "/v1/movies/:id",
+	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id",
 		bknd.requirePermission("movies:write", bknd.updateMovieHandler),
 	)
-	router.HandlerFunc(
-		http.MethodGet, "/v1/movies/:id",
+	router.HandlerFunc(http.MethodGet, "/v1/movies/:id",
 		bknd.requirePermission("movies:read", bknd.showMovieHandler),
 	)
-	router.HandlerFunc(
-		http.MethodDelete, "/v1/movies/:id",
+	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id",
 		bknd.requirePermission("movies:write", bknd.deleteMovieHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", bknd.registerUserHandler)
