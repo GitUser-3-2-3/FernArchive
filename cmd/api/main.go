@@ -100,8 +100,7 @@ func initializeCustomMetrics(db *sql.DB) {
 func runClFlags(cfg *config) {
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev, staging, prod)")
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.db.dsn, "db-dsn",
-		"postgres://archive:Qwerty1,0*@localhost/archive_db?sslmode=disable", "PostgresSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgresSQL DSN")
 
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "DB max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "DB max idle connections")
