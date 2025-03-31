@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	"log/slog"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -68,6 +70,9 @@ func main() {
 		}
 	}(db)
 	logger.Info("Database connection established")
+
+	initializeCustomMetrics(db)
+
 	bknd := &backend{
 		logger: logger,
 		config: cfg,
@@ -82,6 +87,19 @@ func main() {
 	}
 }
 
+func initializeCustomMetrics(db *sql.DB) {
+	expvar.NewString("version").Set(version)
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("timestamp", expvar.Func(func() any {
+		return time.Now().Unix()
+	}))
+}
+
 func runClFlags(cfg *config) {
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev, staging, prod)")
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
@@ -94,7 +112,7 @@ func runClFlags(cfg *config) {
 
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Limiter max requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 5, "Limiter max burst requests")
-	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiting")
+	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", false, "Enable rate limiting")
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")

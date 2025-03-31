@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"net"
 	"net/http"
@@ -182,5 +183,23 @@ func (bknd *backend) enableCORS(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (bknd *backend) requestMetrics(next http.Handler) http.Handler {
+	var (
+		requestsReceived           = expvar.NewInt("requests_received")
+		responsesSent              = expvar.NewInt("responses_sent")
+		processingTimeMicroseconds = expvar.NewInt("processing_time_ms")
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		requestsReceived.Add(1)
+		next.ServeHTTP(w, r)
+		responsesSent.Add(1)
+
+		duration := time.Since(start).Microseconds()
+		processingTimeMicroseconds.Add(duration)
 	})
 }

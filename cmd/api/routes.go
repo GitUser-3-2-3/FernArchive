@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -34,5 +35,8 @@ func (bknd *backend) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", bknd.createAuthTokenHandler)
 
-	return bknd.recoverPanic(bknd.enableCORS(bknd.rateLimiter(bknd.authenticate(router))))
+	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	return bknd.requestMetrics(
+		bknd.recoverPanic(bknd.enableCORS(bknd.rateLimiter(bknd.authenticate(router)))))
 }
