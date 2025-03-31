@@ -89,15 +89,12 @@ func main() {
 
 func initializeCustomMetrics(db *sql.DB) {
 	expvar.NewString("version").Set(version)
-	expvar.Publish("goroutines", expvar.Func(func() any {
-		return runtime.NumGoroutine()
-	}))
-	expvar.Publish("database", expvar.Func(func() any {
-		return db.Stats()
-	}))
-	expvar.Publish("timestamp", expvar.Func(func() any {
-		return time.Now().Unix()
-	}))
+	expvar.Publish(
+		"goroutines", expvar.Func(func() any { return runtime.NumGoroutine() }))
+	expvar.Publish(
+		"database", expvar.Func(func() any { return db.Stats() }))
+	expvar.Publish(
+		"timestamp", expvar.Func(func() any { return time.Now().Unix() }))
 }
 
 func runClFlags(cfg *config) {
