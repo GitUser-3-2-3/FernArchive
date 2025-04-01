@@ -42,7 +42,7 @@ db/migrations/up: confirm
 	migrate -path ./migrations -database ${ARCHIVE_DB_DSN} up
 
 # ================================================================================================== #
-# DEVELOPMENT
+# QUALITY CONTROL
 # ================================================================================================== #
 
 ## tidy: format all .go files and tidy module dependencies
@@ -52,6 +52,9 @@ tidy:
 	go fmt ./...
 	@echo 'Tidying module dependencies...'
 	go mod tidy
+	@echo 'Verifying and vendoring module dependencies...'
+	go mod verify
+	go mod vendor
 
 ## audit: run quality control checks
 .PHONY: audit
