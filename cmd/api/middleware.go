@@ -4,7 +4,6 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"FernArchive/internal/data"
 	"FernArchive/internal/validator"
 
+	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
 
@@ -52,11 +52,7 @@ func (bknd *backend) rateLimiter(next http.Handler) http.Handler {
 	}()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if bknd.config.limiter.enabled {
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err != nil {
-				bknd.serverErrorResponse(w, r, err)
-				return
-			}
+			ip := realip.FromRequest(r)
 			mtx.Lock()
 			if _, found := clients[ip]; !found {
 				clients[ip] = &client{limiter: rate.NewLimiter(
