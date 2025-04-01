@@ -26,9 +26,7 @@ func (bknd *backend) readIdParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (bknd *backend) writeJSON(w http.ResponseWriter, status int, data envelope,
-	headers http.Header,
-) error {
+func (bknd *backend) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -40,6 +38,9 @@ func (bknd *backend) writeJSON(w http.ResponseWriter, status int, data envelope,
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, err = w.Write(js)
+	if err != nil {
+		bknd.logger.Info("Failed to write response", "err", err)
+	}
 	return nil
 }
 

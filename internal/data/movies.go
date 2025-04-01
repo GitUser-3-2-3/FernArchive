@@ -81,7 +81,7 @@ func (mdl *MovieModel) GetAll(title string, genres []string, fltr Filters) ([]*M
 	}
 	defer func(rows *sql.Rows) {
 		if err := rows.Close(); err != nil {
-			slog.Error("Failed to close rows: ", err)
+			slog.Error("Failed to close rows: ", "err", err)
 		}
 	}(rows)
 

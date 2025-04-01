@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -43,7 +44,7 @@ func main() {
 	err := http.ListenAndServe(*addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte(html))
 		if err != nil {
-			log.Printf(err.Error())
+			slog.Info("Failed to write response", "err", err)
 		}
 	}))
 	log.Fatal(err)

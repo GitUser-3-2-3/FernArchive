@@ -35,7 +35,7 @@ func (mdl PermissionModel) GetAllForUser(userId int64) (Permissions, error) {
 	}
 	defer func(rows *sql.Rows) {
 		if err := rows.Close(); err != nil {
-			slog.Error("Failed to close rows: ", err)
+			slog.Error("Failed to close rows: ", "err", err)
 		}
 	}(rows)
 	var permissions Permissions
