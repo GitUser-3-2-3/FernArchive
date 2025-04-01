@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -128,7 +129,13 @@ func runClFlags(cfg *config) {
 		}
 		return nil
 	})
+	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 	if len(cfg.cors.allowedOrigins) == 0 {
 		cfg.cors.allowedOrigins = defaultOrigins
 	}
